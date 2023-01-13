@@ -24,7 +24,7 @@ var bshAppId uint64
 var bmcAppId uint64
 
 func Test_BshSendServiceMessage(t *testing.T) {
-	client, deployer, txParams = tools.Init(t)
+	client, deployer, _, txParams = tools.Init(t)
 
 	bshAppId = tools.BshTestInit(t, client, config.BshTealDir, deployer, txParams)
 	bmcAppId = tools.BmcTestInit(t, client, config.BmcTealDir, deployer, txParams)

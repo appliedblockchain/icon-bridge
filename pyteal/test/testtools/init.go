@@ -9,7 +9,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-func Init(t *testing.T) (client *algod.Client, deployer crypto.Account, txParams types.SuggestedParams) {
+func Init(t *testing.T) (client *algod.Client, deployer crypto.Account, fundingAccount crypto.Account, txParams types.SuggestedParams) {
 	client = MakeAlgodClient(t)
 
 	fundingAccounts, err := GetAccounts()
@@ -17,13 +17,13 @@ func Init(t *testing.T) (client *algod.Client, deployer crypto.Account, txParams
 		log.Fatalf("Failed to get accounts: %+v", err)
 	}
 
-	fundingAccount := fundingAccounts[1]
+	fundingAccount = fundingAccounts[1]
 
 	deployer = crypto.GenerateAccount()
 
 	txParams = SuggestedParams(t, client)
 
-	txnIds := TransferAlgos(t, client, txParams, fundingAccount, []types.Address{deployer.Address}, 10000000)
+	txnIds := TransferAlgos(t, client, txParams, fundingAccount, []types.Address{deployer.Address}, 10000000 + 41700)
 	WaitForConfirmationsT(t, client, txnIds)
 
 	return

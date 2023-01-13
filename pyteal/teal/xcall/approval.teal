@@ -1,0 +1,321 @@
+#pragma version 8
+txn NumAppArgs
+int 0
+==
+bnz main_l6
+txna ApplicationArgs 0
+method "setProtocolFee(uint64)void"
+==
+bnz main_l5
+txna ApplicationArgs 0
+method "sendCallMessage(string,byte[],byte[])void"
+==
+bnz main_l4
+err
+main_l4:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+store 0
+txna ApplicationArgs 2
+store 1
+txna ApplicationArgs 3
+store 2
+load 0
+load 1
+load 2
+callsub sendCallMessage_6
+int 1
+return
+main_l5:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+btoi
+callsub setProtocolFee_5
+int 1
+return
+main_l6:
+txn OnCompletion
+int NoOp
+==
+bnz main_l12
+txn OnCompletion
+int UpdateApplication
+==
+bnz main_l11
+txn OnCompletion
+int DeleteApplication
+==
+bnz main_l10
+err
+main_l10:
+txn Sender
+global CreatorAddress
+==
+return
+main_l11:
+txn Sender
+global CreatorAddress
+==
+return
+main_l12:
+txn ApplicationID
+int 0
+==
+assert
+byte "last_sn"
+int 1
+itob
+app_global_put
+int 1
+return
+
+// checkPrefix
+checkPrefix_0:
+extract 2 0
+extract 0 6
+byte "btp://"
+==
+// PrefixIsNotSupported
+assert
+retsub
+
+// getSlashPosition
+getSlashPosition_1:
+store 22
+int 0
+store 24
+int 7
+store 23
+getSlashPosition_1_l1:
+load 23
+load 22
+int 0
+extract_uint16
+<
+bz getSlashPosition_1_l5
+load 22
+extract 2 0
+load 23
+int 1
+extract3
+byte "/"
+==
+bnz getSlashPosition_1_l4
+load 23
+int 1
++
+store 23
+b getSlashPosition_1_l1
+getSlashPosition_1_l4:
+load 23
+store 24
+getSlashPosition_1_l5:
+load 24
+retsub
+
+// extractNetworkLabel
+extractNetworkLabel_2:
+store 11
+load 11
+extract 2 0
+int 7
+load 11
+callsub getSlashPosition_1
+substring3
+store 12
+load 12
+len
+itob
+extract 6 0
+load 12
+concat
+store 12
+load 12
+retsub
+
+// extractAppLabel
+extractAppLabel_3:
+store 13
+load 13
+extract 2 0
+load 13
+callsub getSlashPosition_1
+int 1
++
+load 13
+int 0
+extract_uint16
+substring3
+store 14
+load 14
+len
+itob
+extract 6 0
+load 14
+concat
+store 14
+load 14
+retsub
+
+// getNextSn
+getNextSn_4:
+byte "last_sn"
+byte "last_sn"
+app_global_get
+btoi
+int 1
++
+itob
+app_global_put
+byte "last_sn"
+app_global_get
+btoi
+retsub
+
+// setProtocolFee
+setProtocolFee_5:
+store 3
+load 3
+int 0
+>=
+// ValueShouldBePositive
+assert
+byte "protocol_fee"
+load 3
+app_global_put
+int 1
+return
+
+// sendCallMessage
+sendCallMessage_6:
+store 6
+store 5
+store 4
+global CallerApplicationID
+int 0
+==
+// SenderNotAContract
+assert
+load 5
+int 0
+extract_uint16
+int 2048
+<=
+// MaxDataSizeExceeded
+assert
+load 6
+int 0
+extract_uint16
+int 1024
+<=
+// MaxRollbackSizeExceeded
+assert
+int 0
+!
+!
+store 10
+load 6
+int 0
+extract_uint16
+int 0
+>
+bnz sendCallMessage_6_l3
+sendCallMessage_6_l1:
+load 4
+callsub checkPrefix_0
+load 4
+callsub extractNetworkLabel_2
+store 7
+load 4
+callsub extractAppLabel_3
+store 8
+callsub getNextSn_4
+store 9
+int 0
+store 15
+load 10
+int 1
+==
+bz sendCallMessage_6_l4
+txn Sender
+store 16
+load 16
+len
+int 32
+==
+assert
+int 0
+!
+!
+store 17
+load 16
+load 8
+store 21
+load 21
+store 20
+int 37
+store 18
+load 18
+load 21
+len
++
+store 19
+load 19
+int 65536
+<
+assert
+load 18
+itob
+extract 6 0
+concat
+load 6
+store 21
+load 20
+load 21
+concat
+store 20
+load 19
+store 18
+load 18
+itob
+extract 6 0
+concat
+byte 0x00
+int 0
+load 17
+setbit
+concat
+load 20
+concat
+log
+load 9
+itob
+int 90
+box_create
+assert
+load 9
+store 15
+b sendCallMessage_6_l4
+sendCallMessage_6_l3:
+int 1
+!
+!
+store 10
+b sendCallMessage_6_l1
+sendCallMessage_6_l4:
+int 1
+return

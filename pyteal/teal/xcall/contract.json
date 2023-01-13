@@ -1,0 +1,38 @@
+{
+  "name": "xcall-handler",
+  "methods": [
+    {
+      "name": "setProtocolFee",
+      "args": [
+        {
+          "type": "uint64",
+          "name": "value"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "sendCallMessage",
+      "args": [
+        {
+          "type": "string",
+          "name": "to"
+        },
+        {
+          "type": "byte[]",
+          "name": "data"
+        },
+        {
+          "type": "byte[]",
+          "name": "rollback"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    }
+  ],
+  "networks": {}
+}

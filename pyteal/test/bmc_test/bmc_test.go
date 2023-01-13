@@ -29,7 +29,7 @@ var err error
 const dummyBTPMessage = "btp message"
 
 func Test_Init(t *testing.T) {
-	client, deployer, txParams = tools.Init(t)
+	client, deployer, _, txParams = tools.Init(t)
 
 	bshAppId = tools.BshTestInit(t, client, config.BshTealDir, deployer, txParams)
 	bmcAppId = tools.BmcTestInit(t, client, config.BmcTealDir, deployer, txParams)
