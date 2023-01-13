@@ -96,7 +96,8 @@ func Test_GetMessagePushedFromXcall(t *testing.T) {
 			t.Fatalf("Failed to get ABI type: %+v", err)
 		}
 
-		fmt.Print(tupleType.)
+		// TODO: need to pass rigth value into tupleType.Decode() function
+		fmt.Print(tupleType)
 
 		log.Printf("%+v\n", txn.EvalDelta.Logs[0])
 	}
