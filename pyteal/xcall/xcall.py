@@ -112,14 +112,10 @@ def sendCallMessage(to: abi.String, data: abi.DynamicArray[abi.Byte], rollback: 
 
             request.set(address_from, dst_account, rollback, enabled),
 
-            Log(request.encode()),
-            
-            Assert(App.box_create(Itob(sn.get()), Int(90))),
+            App.box_put(Itob(sn.get()), request.encode()),
             
             msg_sn.set(sn.get()),
         ),
         
-        # .Then(Log(Bytes("stored"))),
-        # .Then(request.set(Txn.sender(), dst_account.load(), rollback, (abi.make(abi.Bool).set(True)))),
         Approve()
     )

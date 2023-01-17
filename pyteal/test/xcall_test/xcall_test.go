@@ -2,12 +2,11 @@ package tests
 
 import (
 	"encoding/binary"
-	"fmt"
 	"log"
+	"math/rand"
 	"path/filepath"
 	"testing"
 
-	"appliedblockchain.com/icon-bridge/algorand"
 	"appliedblockchain.com/icon-bridge/config"
 	contracts "appliedblockchain.com/icon-bridge/contracts"
 	xcallmethods "appliedblockchain.com/icon-bridge/contracts/methods/xcall"
@@ -52,19 +51,21 @@ func Test_Init(t *testing.T) {
 
 func Test_SendMessageFromDApp(t *testing.T) {
 	xcallAddress := crypto.GetApplicationAddress(xcallAppId)
-	txnIds := tools.TransferAlgos(t, client, txParams, fundingAccount, []types.Address{xcallAddress}, 141700)
+	txnIds := tools.TransferAlgos(t, client, txParams, fundingAccount, []types.Address{xcallAddress}, 548500)
 	tools.WaitForConfirmationsT(t, client, txnIds)
 
 	to := "btp://0x3.icon/cx10f228c2372abf4517685526317a7e43eed1bf57"
-	data := []byte{97, 98, 99, 100, 101, 102}
-	rollback := []byte{97, 98, 99, 100, 101, 102}
+	data := make([]byte, 4)
+	rand.Read(data)
+	rollback := make([]byte, 1024)
+	rand.Read(rollback)
 
 	lastSnBytes := tools.GetGlobalStateByKey(t, client, xcallAppId, "last_sn")
 	lastSn := binary.BigEndian.Uint64(lastSnBytes)
 	boxName := make([]byte, 8)
 	binary.BigEndian.PutUint64(boxName[0:], lastSn + 1)
 
-	xcallMcp.BoxReferences = []types.AppBoxReference{{AppID: xcallAppId, Name: boxName}}
+	xcallMcp.BoxReferences = []types.AppBoxReference{{AppID: xcallAppId, Name: boxName}, {AppID: 0, Name: []byte{}}}
 	_, err := xcallmethods.SendCallMessage(client, xcallContract, xcallMcp, to, data, rollback)
 
 	if err != nil {
@@ -78,27 +79,25 @@ func Test_GetMessagePushedFromXcall(t *testing.T) {
 
 	newBlock := tools.GetBlock(t, client, round)
 
-	txns := algorand.GetTxns(&newBlock, xcallAppId)
+	// txns := algorand.GetTxns(&newBlock, xcallAppId)
 
-	if txns == nil {
-		t.Fatalf("No txns containing btp msgs")
-	}
+	for _, stxn := range newBlock.Payset {
+		for _, l := range stxn.EvalDelta.Logs {
+			addressType := tools.GetAbiType(t, "address")
+			stringType := tools.GetAbiType(t, "string")
+			byteArrayType := tools.GetAbiType(t, "byte[]")
+			booleanType := tools.GetAbiType(t, "bool")
 
-	for _, txn := range *txns {
-		addressType := tools.GetAbiType(t, "address")
-		stringType := tools.GetAbiType(t, "string")
-		byteArrayType := tools.GetAbiType(t, "byte[]")
-		booleanType := tools.GetAbiType(t, "bool")
+			tupleType, err := abi.MakeTupleType([]abi.Type{addressType, stringType, byteArrayType, booleanType})
 
-		tupleType, err := abi.MakeTupleType([]abi.Type{addressType, stringType, byteArrayType, booleanType})
-		
-		if err != nil {
-			t.Fatalf("Failed to get ABI type: %+v", err)
+			if err != nil {
+				t.Fatalf("Failed to get ABI type: %+v", err)
+			}
+
+			log.Print(tupleType.Decode([]byte(l)))
+
+
+			log.Printf("%+v", []byte(l))
 		}
-
-		// TODO: need to pass rigth value into tupleType.Decode() function
-		fmt.Print(tupleType)
-
-		log.Printf("%+v\n", txn.EvalDelta.Logs[0])
 	}
 }
