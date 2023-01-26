@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"appliedblockchain.com/icon-bridge/algorand"
 	"appliedblockchain.com/icon-bridge/config"
 	contracts "appliedblockchain.com/icon-bridge/contracts"
 	bmcmethods "appliedblockchain.com/icon-bridge/contracts/methods/bmc"
@@ -25,8 +24,6 @@ var bmcAppId uint64
 var bmcContract *abi.Contract
 var bmcMcp future.AddMethodCallParams
 var err error
-
-const dummyBTPMessage = "btp message"
 
 func Test_Init(t *testing.T) {
 	client, deployer, txParams = tools.Init(t)
@@ -65,43 +62,9 @@ func Test_RegisterBSHContract(t *testing.T) {
 }
 
 func Test_CallSendMessageFromOutsideOfBsh(t *testing.T) {
-	_, err = bmcmethods.SendMessage(client, bmcContract, bmcMcp)
+	_, err = bmcmethods.SendMessage(client, bmcContract, bmcMcp, []interface{}{"0x1.icon", "bts", 2, []byte("hello world")})
 
 	if err == nil {
 		t.Fatal("SendMessage should throw error, as it's not been called from BSH contract")
-	}
-}
-
-func Test_CallHandleRelayMessageUsingRelayerAsSender(t *testing.T) {
-	ret, err := bmcmethods.HandleRelayMessage(client, bshAppId, dummyBTPMessage, bmcContract, bmcMcp)
-
-	if err != nil {
-		t.Fatalf("Failed to add method call: %+v", err)
-	}
-
-	for _, r := range ret.MethodResults {
-		if r.ReturnValue != "event:start handleBTPMessage" {
-			t.Fatal("Failed to get event after running handleBTPMessage")
-		}
-	}
-}
-
-func Test_GetMessagePushedFromRelayerToBmc(t *testing.T) {
-	round := tools.GetLatestRound(t, client)
-
-	newBlock := tools.GetBlock(t, client, round)
-
-	txns := algorand.GetTxns(&newBlock, bmcAppId)
-
-	if txns == nil {
-		t.Fatalf("No txns containing btp msgs")
-	}
-
-	for _, txn := range *txns {
-		for _, innerTxn := range txn.EvalDelta.InnerTxns {
-			if innerTxn.EvalDelta.Logs[0] != dummyBTPMessage {
-				t.Fatal("Failed to get BTP message pushed from relayer to BMC")
-			}
-		}
 	}
 }

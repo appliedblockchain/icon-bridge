@@ -4,7 +4,7 @@ int 0
 ==
 bnz main_l6
 txna ApplicationArgs 0
-method "sendServiceMessage(application,string,string,uint64)void"
+method "sendServiceMessage(application,string)void"
 ==
 bnz main_l5
 txna ApplicationArgs 0
@@ -22,7 +22,7 @@ int 0
 &&
 assert
 txna ApplicationArgs 1
-callsub handleBTPMessage_1
+callsub handleBTPMessage_6
 int 1
 return
 main_l5:
@@ -40,16 +40,9 @@ getbyte
 store 0
 txna ApplicationArgs 2
 store 1
-txna ApplicationArgs 3
-store 2
-txna ApplicationArgs 4
-btoi
-store 3
 load 0
 load 1
-load 2
-load 3
-callsub sendServiceMessage_0
+callsub sendServiceMessage_5
 int 1
 return
 main_l6:
@@ -81,29 +74,161 @@ txn ApplicationID
 int 0
 ==
 assert
+byte "service_name"
+byte "bts"
+app_global_put
+byte "last_sn"
+int 1
+itob
+app_global_put
 int 1
 return
 
-// sendServiceMessage
-sendServiceMessage_0:
+// checkPrefix
+checkPrefix_0:
+extract 2 0
+extract 0 6
+byte "btp://"
+==
+// PrefixIsNotSupported
+assert
+retsub
+
+// getSlashPosition
+getSlashPosition_1:
+store 13
+int 0
+store 15
+int 7
+store 14
+getSlashPosition_1_l1:
+load 14
+load 13
+int 0
+extract_uint16
+<
+bz getSlashPosition_1_l5
+load 13
+extract 2 0
+load 14
+int 1
+extract3
+byte "/"
+==
+bnz getSlashPosition_1_l4
+load 14
+int 1
++
+store 14
+b getSlashPosition_1_l1
+getSlashPosition_1_l4:
+load 14
+store 15
+getSlashPosition_1_l5:
+load 15
+retsub
+
+// extractNetworkLabel
+extractNetworkLabel_2:
 store 7
-store 6
-store 5
+load 7
+extract 2 0
+int 6
+load 7
+callsub getSlashPosition_1
+substring3
+store 8
+load 8
+len
+itob
+extract 6 0
+load 8
+concat
+store 8
+load 8
+retsub
+
+// extractAppLabel
+extractAppLabel_3:
+store 9
+load 9
+extract 2 0
+load 9
+callsub getSlashPosition_1
+int 1
++
+load 9
+int 0
+extract_uint16
+substring3
+store 10
+load 10
+len
+itob
+extract 6 0
+load 10
+concat
+store 10
+load 10
+retsub
+
+// getNextSn
+getNextSn_4:
+byte "last_sn"
+byte "last_sn"
+app_global_get
+btoi
+int 1
++
+itob
+app_global_put
+byte "last_sn"
+app_global_get
+btoi
+retsub
+
+// sendServiceMessage
+sendServiceMessage_5:
+store 3
+store 2
+load 3
+callsub checkPrefix_0
+load 3
+callsub extractNetworkLabel_2
 store 4
+load 3
+callsub extractAppLabel_3
+store 5
+callsub getNextSn_4
+store 6
+byte "service_name"
+app_global_get
+store 11
+load 11
+len
+itob
+extract 6 0
+load 11
+concat
+store 11
+byte 0x000b68656c6c6f20776f726c64
+store 12
 itxn_begin
 int appl
 itxn_field TypeEnum
-load 4
+load 2
 txnas Applications
 itxn_field ApplicationID
-method "sendMessage(string,string,uint64)string"
+method "sendMessage(string,string,uint64,byte[])void"
 itxn_field ApplicationArgs
-load 5
+load 4
+itxn_field ApplicationArgs
+load 11
 itxn_field ApplicationArgs
 load 6
-itxn_field ApplicationArgs
-load 7
 itob
+itxn_field ApplicationArgs
+load 12
 itxn_field ApplicationArgs
 int 0
 itxn_field Fee
@@ -111,7 +236,7 @@ itxn_submit
 retsub
 
 // handleBTPMessage
-handleBTPMessage_1:
+handleBTPMessage_6:
 extract 2 0
 log
 retsub

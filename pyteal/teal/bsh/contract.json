@@ -11,14 +11,6 @@
         {
           "type": "string",
           "name": "to"
-        },
-        {
-          "type": "string",
-          "name": "svc"
-        },
-        {
-          "type": "uint64",
-          "name": "sn"
         }
       ],
       "returns": {

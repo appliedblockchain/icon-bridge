@@ -11,10 +11,10 @@ import (
 	"github.com/algorand/go-algorand-sdk/future"
 )
 
-func SendMessage(client *algod.Client, bmcContract *abi.Contract, mcp future.AddMethodCallParams) (ret future.ExecuteResult, err error) {
+func SendMessage(client *algod.Client, bmcContract *abi.Contract, mcp future.AddMethodCallParams, args []interface{}) (ret future.ExecuteResult, err error) {
 	var atc = future.AtomicTransactionComposer{}
 
-	err = atc.AddMethodCall(tools.CombineMethod(mcp, tools.GetMethod(bmcContract, "sendMessage"), []interface{}{"ICON", "TOKEN_TRANSFER_SERVICE", 3}))
+	err = atc.AddMethodCall(tools.CombineMethod(mcp, tools.GetMethod(bmcContract, "sendMessage"), args))
 
 	if err != nil {
 		fmt.Printf("Failed to add method SendMessage call into BMC contract: %+v \n", err)

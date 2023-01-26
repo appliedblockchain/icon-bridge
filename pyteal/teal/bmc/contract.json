@@ -2,6 +2,32 @@
   "name": "bmc-handler",
   "methods": [
     {
+      "name": "setBTPAddress",
+      "args": [
+        {
+          "type": "string",
+          "name": "network"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      },
+      "desc": "Set BTP address for BMC in Algorand network, ex: btp://1234.algo/0xabcd"
+    },
+    {
+      "name": "setRoute",
+      "args": [
+        {
+          "type": "string",
+          "name": "route"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      },
+      "desc": "Set BTP address for Icon BMC, ex: btp://0x1.icon/0xabcd"
+    },
+    {
       "name": "registerBSHContract",
       "args": [
         {
@@ -39,10 +65,14 @@
         {
           "type": "uint64",
           "name": "sn"
+        },
+        {
+          "type": "byte[]",
+          "name": "msg"
         }
       ],
       "returns": {
-        "type": "string"
+        "type": "void"
       }
     },
     {

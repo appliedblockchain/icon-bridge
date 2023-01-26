@@ -2,25 +2,33 @@
 txn NumAppArgs
 int 0
 ==
-bnz main_l10
+bnz main_l14
+txna ApplicationArgs 0
+method "setBTPAddress(string)void"
+==
+bnz main_l13
+txna ApplicationArgs 0
+method "setRoute(string)void"
+==
+bnz main_l12
 txna ApplicationArgs 0
 method "registerBSHContract(address)void"
 ==
-bnz main_l9
+bnz main_l11
 txna ApplicationArgs 0
 method "setRelayer(address)void"
 ==
-bnz main_l8
+bnz main_l10
 txna ApplicationArgs 0
-method "sendMessage(string,string,uint64)string"
+method "sendMessage(string,string,uint64,byte[])void"
 ==
-bnz main_l7
+bnz main_l9
 txna ApplicationArgs 0
 method "handleRelayMessage(application,string)string"
 ==
-bnz main_l6
+bnz main_l8
 err
-main_l6:
+main_l8:
 txn OnCompletion
 int NoOp
 ==
@@ -32,20 +40,20 @@ assert
 txna ApplicationArgs 1
 int 0
 getbyte
-store 7
+store 4
 txna ApplicationArgs 2
-store 8
-load 7
-load 8
-callsub handleRelayMessage_3
-store 9
+store 5
+load 4
+load 5
+callsub handleRelayMessage_7
+store 6
 byte 0x151f7c75
-load 9
+load 6
 concat
 log
 int 1
 return
-main_l7:
+main_l9:
 txn OnCompletion
 int NoOp
 ==
@@ -61,68 +69,92 @@ store 1
 txna ApplicationArgs 3
 btoi
 store 2
+txna ApplicationArgs 4
+store 3
 load 0
 load 1
 load 2
-callsub sendMessage_2
-store 3
-byte 0x151f7c75
 load 3
-concat
-log
-int 1
-return
-main_l8:
-txn OnCompletion
-int NoOp
-==
-txn ApplicationID
-int 0
-!=
-&&
-assert
-txna ApplicationArgs 1
-callsub setRelayer_1
-int 1
-return
-main_l9:
-txn OnCompletion
-int NoOp
-==
-txn ApplicationID
-int 0
-!=
-&&
-assert
-txna ApplicationArgs 1
-callsub registerBSHContract_0
+callsub sendMessage_6
 int 1
 return
 main_l10:
 txn OnCompletion
 int NoOp
 ==
-bnz main_l16
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+callsub setRelayer_5
+int 1
+return
+main_l11:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+callsub registerBSHContract_4
+int 1
+return
+main_l12:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+callsub setRoute_3
+int 1
+return
+main_l13:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+callsub setBTPAddress_2
+int 1
+return
+main_l14:
+txn OnCompletion
+int NoOp
+==
+bnz main_l20
 txn OnCompletion
 int UpdateApplication
 ==
-bnz main_l15
+bnz main_l19
 txn OnCompletion
 int DeleteApplication
 ==
-bnz main_l14
+bnz main_l18
 err
-main_l14:
+main_l18:
 txn Sender
 global CreatorAddress
 ==
 return
-main_l15:
+main_l19:
 txn Sender
 global CreatorAddress
 ==
 return
-main_l16:
+main_l20:
 txn ApplicationID
 int 0
 ==
@@ -130,53 +162,225 @@ assert
 byte "relayer_acc_address"
 global CreatorAddress
 app_global_put
+byte "route"
+byte "btp://0x1.icon/0x12333"
+app_global_put
+byte "btp_address"
+byte "btp://0x1.algo/0x12333"
+app_global_put
+int 1
+return
+
+// checkPrefix
+checkPrefix_0:
+extract 2 0
+extract 0 6
+byte "btp://"
+==
+// PrefixIsNotSupported
+assert
+retsub
+
+// checkRouteNetwork
+checkRouteNetwork_1:
+store 23
+byte "route"
+app_global_get
+store 24
+load 24
+len
+itob
+extract 6 0
+load 24
+concat
+store 24
+load 24
+extract 2 0
+int 6
+int 6
+load 23
+extract 2 0
+len
++
+substring3
+load 23
+extract 2 0
+==
+// RouteNotFound
+assert
+retsub
+
+// setBTPAddress
+setBTPAddress_2:
+store 9
+byte "btp_address"
+byte "btp://"
+load 9
+concat
+byte "/"
+concat
+global CurrentApplicationAddress
+concat
+app_global_put
+int 1
+return
+
+// setRoute
+setRoute_3:
+store 10
+load 10
+callsub checkPrefix_0
+byte "route"
+load 10
+app_global_put
 int 1
 return
 
 // registerBSHContract
-registerBSHContract_0:
-store 12
+registerBSHContract_4:
+store 11
 txn Sender
 global CreatorAddress
 ==
 assert
 byte "bsh_app_address"
-load 12
+load 11
 app_global_put
 int 1
 return
 
 // setRelayer
-setRelayer_1:
-store 13
+setRelayer_5:
+store 12
 txn Sender
 byte "relayer_acc_address"
 app_global_get
 ==
 assert
 byte "relayer_acc_address"
-load 13
+load 12
 app_global_put
 int 1
 return
 
 // sendMessage
-sendMessage_2:
-store 6
-store 5
-store 4
+sendMessage_6:
+store 16
+store 15
+store 14
+store 13
 txn Sender
 byte "bsh_app_address"
 app_global_get
 ==
 assert
-byte 0x00116576656e743a627470206d657373616765
-retsub
+load 13
+callsub checkRouteNetwork_1
+byte "btp_address"
+app_global_get
+store 17
+load 17
+len
+itob
+extract 6 0
+load 17
+concat
+store 17
+byte "route"
+app_global_get
+store 18
+load 18
+len
+itob
+extract 6 0
+load 18
+concat
+store 18
+load 17
+store 22
+load 22
+store 21
+int 16
+store 19
+load 19
+load 22
+len
++
+store 20
+load 20
+int 65536
+<
+assert
+load 19
+itob
+extract 6 0
+load 18
+store 22
+load 21
+load 22
+concat
+store 21
+load 20
+store 19
+load 19
+load 22
+len
++
+store 20
+load 20
+int 65536
+<
+assert
+load 19
+itob
+extract 6 0
+concat
+load 14
+store 22
+load 21
+load 22
+concat
+store 21
+load 20
+store 19
+load 19
+load 22
+len
++
+store 20
+load 20
+int 65536
+<
+assert
+load 19
+itob
+extract 6 0
+concat
+load 15
+itob
+concat
+load 16
+store 22
+load 21
+load 22
+concat
+store 21
+load 20
+store 19
+load 19
+itob
+extract 6 0
+concat
+load 21
+concat
+log
+int 1
+return
 
 // handleRelayMessage
-handleRelayMessage_3:
-store 11
-store 10
+handleRelayMessage_7:
+store 8
+store 7
 txn Sender
 byte "relayer_acc_address"
 app_global_get
@@ -185,12 +389,12 @@ assert
 itxn_begin
 int appl
 itxn_field TypeEnum
-load 10
+load 7
 txnas Applications
 itxn_field ApplicationID
 method "handleBTPMessage(string)void"
 itxn_field ApplicationArgs
-load 11
+load 8
 itxn_field ApplicationArgs
 int 0
 itxn_field Fee
