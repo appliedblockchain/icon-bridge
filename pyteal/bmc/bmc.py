@@ -18,10 +18,19 @@ class BMCMessage(abi.NamedTuple):
 
 @Subroutine(TealType.none)
 def checkPrefix(address: abi.String):
+    """
+    Check if a prefix is valid prefix for BTP protocol.
+    
+    Args:
+        address: BTP address.
+    """
+
     return Assert(Substring(address.get(), Int(0), Int(6)) == Bytes("btp://"), comment="PrefixIsNotSupported")
 
 @Subroutine(TealType.none)
 def checkRouteNetwork(network: abi.String):
+    """Check if a destination network is a registered network"""
+
     return Seq(
         (route := abi.String()).set(App.globalGet(global_route)),
         Assert(Substring(route.get(), Int(6), Int(6) + Len(network.get())) == network.get(), comment="RouteNotFound")
@@ -65,6 +74,15 @@ def setRoute(route: abi.String):
 
 @router.method
 def registerBSHContract(bsh_app_address: abi.Address): 
+    """
+    This method sets the BSH contract address.
+    
+    The caller must be creator of BMC contract.
+
+    Args:
+        bsh_app_address: Address of BSH smart contract.
+
+    """
     return Seq(
         Assert(is_creator),
         App.globalPut(global_bsh_app_address, bsh_app_address.get()),
@@ -73,6 +91,16 @@ def registerBSHContract(bsh_app_address: abi.Address):
 
 @router.method
 def setRelayer(relayer_account: abi.Address): 
+    """
+    This method sets the relay account.
+    
+    The caller must be registered relayer.
+
+    Args:
+        relayer_account: Address of relayer account.
+
+    """
+
     return Seq(
         Assert(is_relayer),
         App.globalPut(global_relayer_acc_address, relayer_account.get()),
@@ -81,6 +109,19 @@ def setRelayer(relayer_account: abi.Address):
     
 @router.method
 def sendMessage (to: abi.String, svc: abi.String, sn: abi.Uint64, msg: abi.DynamicBytes) -> Expr:
+    """
+    This method Log byte array of BMC message received from registered BSH's
+    
+    The caller must be an registered BSH smart contract.
+
+    Args:
+        to: BTP Address of destination BMC.
+        svc: Service that is to be handled.
+        sn: Serial number of the message, it should be positive.
+        msg: BSH Message in bytes to be picked up by relayer.
+
+    """
+
     bmcMessage = BMCMessage()
     
     return Seq(
@@ -97,7 +138,7 @@ def sendMessage (to: abi.String, svc: abi.String, sn: abi.Uint64, msg: abi.Dynam
     )
 
 @router.method
-def handleRelayMessage (bsh_app: abi.Application, msg: abi.String,  *, output: abi.String) -> Expr:
+def handleRelayMessage (bsh_app: abi.Application, msg: abi.String) -> Expr:
     return Seq(
         Assert(is_relayer),
         InnerTxnBuilder.Begin(),
@@ -110,5 +151,4 @@ def handleRelayMessage (bsh_app: abi.Application, msg: abi.String,  *, output: a
             }
         ),
         InnerTxnBuilder.Submit(),
-        output.set("event:start handleBTPMessage")
     )

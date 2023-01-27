@@ -56,24 +56,29 @@
       "args": [
         {
           "type": "string",
-          "name": "to"
+          "name": "to",
+          "desc": "BTP Address of destination BMC."
         },
         {
           "type": "string",
-          "name": "svc"
+          "name": "svc",
+          "desc": "Service that is to be handled."
         },
         {
           "type": "uint64",
-          "name": "sn"
+          "name": "sn",
+          "desc": "Serial number of the message, it should be positive."
         },
         {
           "type": "byte[]",
-          "name": "msg"
+          "name": "msg",
+          "desc": "BSH Message in bytes to be picked up by relayer."
         }
       ],
       "returns": {
         "type": "void"
-      }
+      },
+      "desc": "This method Log byte array of BMC message received from registered BSH's\nThe caller must be an registered BSH smart contract."
     },
     {
       "name": "handleRelayMessage",

@@ -7,10 +7,19 @@ is_creator = Txn.sender() == Global.creator_address()
 
 @Subroutine(TealType.none)
 def checkPrefix(address: abi.String):
+    """
+    Check if a prefix is valid prefix for BTP protocol.
+    
+    Args:
+        address: BTP address.
+    """
+
     return Assert(Substring(address.get(), Int(0), Int(6)) == Bytes("btp://"), comment="PrefixIsNotSupported")
 
 @Subroutine(TealType.uint64)
 def getSlashPosition(address: abi.String):
+    """Get slash position between btp network and address of smart contract."""
+
     i = ScratchVar(TealType.uint64)
     position_slash = ScratchVar(TealType.uint64)
 
@@ -30,18 +39,24 @@ def getSlashPosition(address: abi.String):
 def extractNetworkLabel(
     address: abi.String, *, output: abi.String
 ) -> Expr:
+    """Extract network from BTP address."""
+
     return output.set(Substring(address.get(), Int(6), getSlashPosition(address)))
 
 @ABIReturnSubroutine
 def extractAppLabel(
     address: abi.String, *, output: abi.String
 ) -> Expr:
+    """Extract smart contract address from BTP address."""
+
     return output.set(Substring(address.get(), getSlashPosition(address) + Int(1), address.length()))
 
 @ABIReturnSubroutine
 def getNextSn(
     *, output: abi.Uint64
 ) -> Expr:
+    """Generate autoincrement serial namber."""
+
     return Seq([
         App.globalPut(global_last_sn, Itob(Btoi(App.globalGet(global_last_sn)) + Int(1))),
         output.set(Btoi(App.globalGet(global_last_sn)))
@@ -65,6 +80,17 @@ router = Router(
 
 @router.method
 def sendServiceMessage(bmc_app: abi.Application, to: abi.String) -> Expr:
+    """
+    This method send BTP message to other chain using BMC smart contract.
+    
+    The BMC application may opt into this app during this call.
+
+    Args:
+        bmc_app: ID of the BMC application that should process the message.
+        to: BTP Address of destination BMC.
+
+    """
+
     net_to = abi.make(abi.String)
     dst_account = abi.make(abi.String)
     sn = abi.make(abi.Uint64)
