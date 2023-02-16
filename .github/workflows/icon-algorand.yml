@@ -194,12 +194,12 @@ jobs:
 
           ./../../algorand/scripts/wait_for_transaction.sh $LINK_TXN_ID
 
-          ALGO_ROUND=$(goal node lastround -d /tmp/testnet/Node)
+          goal node lastround -d /tmp/testnet/Node > cache/algo_last_round
 
           ADD_ROUND=$(goloop rpc sendtx call --to $(cat cache/icon_bmc_addr) --method setLinkRxHeight \
-          --param _link=$(cat cache/algo_btp_addr) --param _height=$ALGO_ROUND \
-          --key_store ./icon.keystore.json --key_password gochain \
-          --nid $(cat cache/nid) --step_limit 3000000000 --uri http://localhost:9080/api/v3)
+              --param _link=$(cat cache/algo_btp_addr) --param _height=$(cat cache/algo_last_round) \
+              --key_store ./icon.keystore.json --key_password gochain \
+              --nid $(cat cache/nid) --step_limit 3000000000 --uri http://localhost:9080/api/v3)
 
           ./../../algorand/scripts/wait_for_transaction.sh $ADD_ROUND
 
@@ -217,9 +217,15 @@ jobs:
           ICON_ALGO="../../devnet/docker/icon-algorand"
           ICON_BTP="btp://0x2.icon/$(cat "$ICON_ALGO/cache/icon_bmc_addr")"
           ALGO_BTP=$(cat "$ICON_ALGO/cache/algo_btp_addr")
+          BMC_ID=$(cat "$ICON_ALGO/cache/bmc_app_id)
 
-          jq --arg ICON_BTP "$ICON_BTP" --arg ALGO_BTP "$ALGO_BTP" '.relays[0].dst.address=$ICON_BTP | .relays[0].src.address=$ALGO_BTP' $ICON_ALGO/a2i.json > a2i_tmp.json
+          ALGO_ROUND=$(cat "$ICON_ALGO/cache/algo_last_round" | tr -d '\n')
+          jq --arg ICON_BTP "$ICON_BTP" --arg ALGO_BTP "$ALGO_BTP" --argjson ALGO_ROUND "$ALGO_ROUND" --argjson BMC_ID "$BMC_ID" '.relays[0].dst.address=$ICON_BTP | .relays[0].src.address=$ALGO_BTP | .relays[0].src.options.verifier.round=$ALGO_ROUND | .relays[0].src.options.appID=$BMC_ID' $ICON_ALGO/a2i.json >a2i_tmp.json
+
           mv a2i_tmp.json $ICON_ALGO/a2i.json
 
           go run . -config=$ICON_ALGO/a2i.json &
+
+          sleep 10
+
           cat $ICON_ALGO/a2i.json
