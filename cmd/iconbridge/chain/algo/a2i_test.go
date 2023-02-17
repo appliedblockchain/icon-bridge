@@ -20,15 +20,12 @@ import (
 	"github.com/algorand/go-algorand-sdk/types"
 )
 
-const(
+const (
 	cacheDir = "../../../../devnet/docker/icon-algorand/cache/"
 )
+
+// This test is not final, will need changes, but for now sends a transaction to the local network
 func Test_SendDummyMessage(t *testing.T) {
-/* 	args := os.Args[1:]
-	if len(args) != 3 {
-		t.Errorf("Wrong number of arguments")
-	}
- */
 	algod, err := algod.MakeClient(algodAddress, algoToken)
 	if err != nil {
 		t.Errorf("Failed to create algod client: %v", err)
@@ -77,13 +74,15 @@ func Test_SendDummyMessage(t *testing.T) {
 	}
 
 	var atc = future.AtomicTransactionComposer{}
+	sendMsg, err := getMethod(abiBmc, "sendMessage")
+	if err != nil {
+		t.Errorf("Failed to get sendMessage method: %v", err)
+	}
 
-
-	err = atc.AddMethodCall(combinee(mcp, getMethodd(abiBmc, "sendMessage"), []interface{}{"ICON", "TOKEN_TRANSFER_SERVICE", 3}))
+	err = atc.AddMethodCall(combine(mcp, sendMsg, []interface{}{"ICON", "TOKEN_TRANSFER_SERVICE", 3}))
 	if err != nil {
 		t.Errorf("Failed to add method call: %v", err)
 	}
-
 
 	ret, err := atc.Execute(algod, ctx, 5)
 	if err != nil {
@@ -97,33 +96,19 @@ func Test_SendDummyMessage(t *testing.T) {
 
 // create func to read file and return a string with the contents
 func getFileVar(filename string) string {
-    // open file
-    file, err := os.Open(cacheDir + filename)
-    if err != nil {
-        fmt.Println(err)
-        return ""
-    }
-    defer file.Close()
-    // read file contents as byte slice
-    byteValue, err := ioutil.ReadAll(file)
-    if err != nil {
-        fmt.Println(err)
-        return ""
-    }
-    // convert byte slice to string
-    return string(byteValue)
-}
-
-func getMethodd(c *abi.Contract, name string) abi.Method {
-	m, err := c.GetMethodByName(name)
+	// open file
+	file, err := os.Open(cacheDir + filename)
 	if err != nil {
-		log.Fatalf("No method named: %s", name)
+		fmt.Println(err)
+		return ""
 	}
-	return m
-}
-
-func combinee(mcp future.AddMethodCallParams, m abi.Method, a []interface{}) future.AddMethodCallParams {
-	mcp.Method = m
-	mcp.MethodArgs = a
-	return mcp
+	defer file.Close()
+	// read file contents as byte slice
+	byteValue, err := ioutil.ReadAll(file)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	// convert byte slice to string
+	return string(byteValue)
 }
