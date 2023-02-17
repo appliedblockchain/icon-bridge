@@ -8,9 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
-	"github.com/algorand/go-algorand-sdk/abi"
 	"github.com/algorand/go-algorand-sdk/types"
 	"github.com/icon-project/icon-bridge/cmd/iconbridge/chain"
 	"github.com/icon-project/icon-bridge/common/log"
@@ -193,19 +193,16 @@ func (r *receiver) getRelayReceipts(block *types.Block, seq *uint64) (
 			r.log.Debug("LOG FOUND !!!!!!!!")
 			// there could be multiple logs sent from each transaction
 			for _, txnLog := range signedTxnInBlock.EvalDelta.Logs {
-				bmcMsg, err := extractMsg(txnLog)
-				if err != nil {
-					return nil, fmt.Errorf("Error extracting message from log: %s", err)
-				}
+				bmcMsg := r.extractMsg(txnLog,
+					signedTxnInBlock.SignedTxnWithAD.SignedTxn.Txn.ApplicationFields.ApplicationCallTxnFields.ApplicationArgs)
+
 				if chain.BTPAddress(bmcMsg.Dst) != r.dst {
 					return nil, fmt.Errorf("Unexpected destination %s, expected %s. - Block %d",
 						bmcMsg.Dst, r.dst, block.Round)
 				}
-				var sn uint64
-				binary.Read(bytes.NewReader(bmcMsg.Sn), binary.BigEndian, &sn)
 				events = append(events, &chain.Event{
 					Next:     chain.BTPAddress(bmcMsg.Dst),
-					Sequence: sn,
+					Sequence: bmcMsg.Sn,
 					Message:  bmcMsg.Message,
 				})
 			}
@@ -233,34 +230,17 @@ func (r *receiver) getRelayReceipts(block *types.Block, seq *uint64) (
 	return receipts, nil
 }
 
-func extractMsg(txnLog string) (BMCMessage, error) {
-	var bmcMessage BMCMessage
-
-	tupleType, err := abi.TypeOf("(string,string,string,uint64,byte[])")
-
-	if err != nil {
-		return bmcMessage, fmt.Errorf("Failed to get tuple type: %+v", err)
-	}
-	decoded, err := tupleType.Decode([]byte(txnLog))
-	if err != nil {
-		return bmcMessage, fmt.Errorf("Failed to decode tuple type: %+v", err)
+func (r *receiver) extractMsg(txnLog string, appArgs [][]uint8) (bmcMsg BMCMessageAlgo) {
+	btpIndex := strings.Index(string(appArgs[1]), "btp")
+	var dst string
+	if btpIndex != -1 {
+		dst = string(appArgs[1])[btpIndex:]
 	}
 
-	if val, ok := decoded.([]interface{}); ok {
-		var msgBytes []byte
-		for _, v := range val[4].([]interface{}) {
-			msgBytes = append(msgBytes, byte(v.(uint8)))
-		}
-		buf := new(bytes.Buffer)
-		binary.Write(buf, binary.BigEndian, val[3].(uint64))
-
-		bmcMessage.Src = val[0].(string)
-		bmcMessage.Dst = val[1].(string)
-		bmcMessage.Svc = val[2].(string)
-		bmcMessage.Sn = buf.Bytes()
-		bmcMessage.Message = msgBytes
-	} else {
-		return bmcMessage, fmt.Errorf("Decoded tuple had unexpected type %+v", err)
-	}
-	return bmcMessage, nil
+	bmcMsg.Src = r.src.String()
+	bmcMsg.Dst = strings.TrimRight(dst, "\n")
+	bmcMsg.Svc = txnLog
+	bmcMsg.Sn = binary.BigEndian.Uint64(appArgs[2])
+	bmcMsg.Message = appArgs[3]
+	return
 }

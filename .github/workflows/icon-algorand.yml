@@ -216,17 +216,16 @@ jobs:
         working-directory: ./cmd/iconbridge
         run: |
           ICON_ALGO="../../devnet/docker/icon-algorand"
-          ICON_BTP="btp://0x2.icon/$(cat "$ICON_ALGO/cache/icon_bmc_addr")"
+          ICON_BTP="btp://$(cat "$ICON_ALGO/cache/nid").icon/$(cat "$ICON_ALGO/cache/icon_bmc_addr")"
+          echo $ICON_BTP > $ICON_ALGO/cache/icon_btp_addr
           ALGO_BTP=$(cat "$ICON_ALGO/cache/algo_btp_addr")
           BMC_ID=$(cat "$ICON_ALGO/cache/bmc_app_id")
           ALGO_ROUND=$(cat "$ICON_ALGO/cache/algo_last_round" | tr -d '\n')
 
           jq --arg ICON_BTP "$ICON_BTP" --arg ALGO_BTP "$ALGO_BTP" --argjson ALGO_ROUND "$ALGO_ROUND" --argjson BMC_ID "$BMC_ID" '.relays[0].dst.address=$ICON_BTP | .relays[0].src.address=$ALGO_BTP | .relays[0].src.options.verifier.round=$ALGO_ROUND | .relays[0].src.options.appID=$BMC_ID' $ICON_ALGO/a2i.json > a2i_tmp.json
-
           mv a2i_tmp.json $ICON_ALGO/a2i.json
 
           go run . -config=$ICON_ALGO/a2i.json &
-
           sleep 10
 
       - name: Run integration test

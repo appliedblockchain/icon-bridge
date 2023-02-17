@@ -79,7 +79,10 @@ func Test_SendDummyMessage(t *testing.T) {
 		t.Errorf("Failed to get sendMessage method: %v", err)
 	}
 
-	err = atc.AddMethodCall(combine(mcp, sendMsg, []interface{}{"ICON", "TOKEN_TRANSFER_SERVICE", 3}))
+	iconBtp := getFileVar("icon_btp_addr")
+	msg := []byte("helloworld")
+	err = atc.AddMethodCall(combine(mcp, sendMsg, []interface{}{iconBtp, 1, msg}))
+
 	if err != nil {
 		t.Errorf("Failed to add method call: %v", err)
 	}
