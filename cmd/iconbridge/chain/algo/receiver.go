@@ -193,18 +193,14 @@ func (r *receiver) getRelayReceipts(block *types.Block, seq *uint64) (
 			r.log.Debug("LOG FOUND !!!!!!!!")
 			// there could be multiple logs sent from each transaction
 			for _, txnLog := range signedTxnInBlock.EvalDelta.Logs {
-				bmcMsg := r.extractMsg(txnLog,
+				event, err := r.getEventFromMsg(txnLog,
 					signedTxnInBlock.SignedTxnWithAD.SignedTxn.Txn.ApplicationFields.ApplicationCallTxnFields.ApplicationArgs)
-
-				if chain.BTPAddress(bmcMsg.Dst) != r.dst {
-					return nil, fmt.Errorf("Unexpected destination %s, expected %s. - Block %d",
-						bmcMsg.Dst, r.dst, block.Round)
+				if err != nil {
+					r.log.WithFields(log.Fields{"error": err}).Error(
+						"getRelayReceipts: error extracting event from relay message")
+					return nil, err
 				}
-				events = append(events, &chain.Event{
-					Next:     chain.BTPAddress(bmcMsg.Dst),
-					Sequence: bmcMsg.Sn,
-					Message:  bmcMsg.Message,
-				})
+				events = append(events, event)
 			}
 			// sort txn events in case they came out of order
 			sort.Slice(events, func(i, j int) bool {
@@ -230,17 +226,34 @@ func (r *receiver) getRelayReceipts(block *types.Block, seq *uint64) (
 	return receipts, nil
 }
 
-func (r *receiver) extractMsg(txnLog string, appArgs [][]uint8) (bmcMsg BMCMessageAlgo) {
+func (r *receiver) getEventFromMsg(txnLog string, appArgs [][]uint8) (*chain.Event, error) {
 	btpIndex := strings.Index(string(appArgs[1]), "btp")
 	var dst string
 	if btpIndex != -1 {
 		dst = string(appArgs[1])[btpIndex:]
 	}
+	bmcMsg := BMCMessageAlgo{
+		Src:     r.src.String(),
+		Dst:     strings.TrimRight(dst, "\n"),
+		Svc:     txnLog,
+		Sn:      binary.BigEndian.Uint64(appArgs[2]),
+		Message: appArgs[3],
+	}
 
-	bmcMsg.Src = r.src.String()
-	bmcMsg.Dst = strings.TrimRight(dst, "\n")
-	bmcMsg.Svc = txnLog
-	bmcMsg.Sn = binary.BigEndian.Uint64(appArgs[2])
-	bmcMsg.Message = appArgs[3]
-	return
+	if chain.BTPAddress(bmcMsg.Dst) != r.dst {
+		return &chain.Event{}, fmt.Errorf("Unexpected msg destination %s, expected %s.", bmcMsg.Dst, r.dst)
+	}
+
+	rlpMsg, err := RlpEncodeHex(bmcMsg)
+
+	if err != nil {
+		return &chain.Event{}, fmt.Errorf("Failed to rlp encode BMC message: %v", err)
+	}
+
+	event := &chain.Event{
+		Next:     chain.BTPAddress(bmcMsg.Dst),
+		Sequence: bmcMsg.Sn,
+		Message:  rlpMsg,
+	}
+	return event, nil
 }
