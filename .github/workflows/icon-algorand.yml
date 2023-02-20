@@ -184,10 +184,13 @@ jobs:
 
           echo $PRIVATE_KEY > cache/algo_private_key
           printf '%s' "$BMC_APP_ID" > cache/bmc_app_id
+          printf '%s' "$DUMMY_BSH_APP_ID" > cache/dbsh_app_id
 
           goal app info --app-id $BMC_APP_ID -d /tmp/testnet/Node |
           awk -F ':' '/Application account:/ {gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2); \
           print "btp://0x14.algo/" $2}' > cache/algo_btp_addr
+
+          register-dummy-bsh ../../../pyteal/teal
 
       - name: Link Algorand BMC on Icon BMC
         working-directory: ./devnet/docker/icon-algorand
@@ -228,10 +231,19 @@ jobs:
           BMC_ID=$(cat "$ICON_ALGO/cache/bmc_app_id")
           ALGO_ROUND=$(cat "$ICON_ALGO/cache/algo_last_round" | tr -d '\n')
 
-          jq --arg ICON_BTP "$ICON_BTP" --arg ALGO_BTP "$ALGO_BTP" --argjson ALGO_ROUND "$ALGO_ROUND" --argjson BMC_ID "$BMC_ID" '.relays[0].dst.address=$ICON_BTP | .relays[0].src.address=$ALGO_BTP | .relays[0].src.options.verifier.round=$ALGO_ROUND | .relays[0].src.options.appID=$BMC_ID' $ICON_ALGO/a2i.json > a2i_tmp.json
-          mv a2i_tmp.json $ICON_ALGO/a2i.json
+          jq --arg ICON_BTP "$ICON_BTP" \
+          --arg ALGO_BTP "$ALGO_BTP" \
+          --argjson ALGO_ROUND "$ALGO_ROUND" \
+          --argjson BMC_ID "$BMC_ID" \
+          '.relays[0].dst.address=$ICON_BTP | \
+           .relays[0].src.address=$ALGO_BTP | \
+           .relays[0].src.options.verifier.round=$ALGO_ROUND | \
+           .relays[0].src.options.appID=$BMC_ID' \
+          $ICON_ALGO/algo-config.json > a2i_tmp.json
 
-          go run . -config=$ICON_ALGO/a2i.json &
+          mv a2i_tmp.json $ICON_ALGO/algo-config.json
+
+          go run . -config=$ICON_ALGO/algo-config.json &
           sleep 10
 
       - name: Run integration test
