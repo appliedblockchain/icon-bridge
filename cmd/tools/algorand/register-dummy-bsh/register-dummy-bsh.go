@@ -66,7 +66,10 @@ func callAbiMethod(client *algod.Client, contract *abi.Contract, mcp future.AddM
 		log.Fatalf("No method named: %s", name)
 	}
 
-	err = atc.AddMethodCall(future.AddMethodCallParams{Method: method, MethodArgs: args})
+	mcp.Method = method
+	mcp.MethodArgs = args
+
+	err = atc.AddMethodCall(mcp)
 
 	if err != nil {
 		fmt.Printf("Failed to add method %s call: %+v \n", name, err)
