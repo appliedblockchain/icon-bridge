@@ -60,7 +60,8 @@ def sendMessage (to: abi.String, sn: abi.Uint64, msg: abi.DynamicBytes) -> Expr:
     """
 
     return Seq(
-        Log(Bytes("hello world"))
+        (sender_svc := abi.String()).set(App.localGet(Txn.sender(), Bytes("svc"))),
+        Log(sender_svc.get()),
     )
 
 @router.method
