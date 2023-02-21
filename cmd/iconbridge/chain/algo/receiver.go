@@ -186,15 +186,15 @@ func (r *receiver) getRelayReceipts(block *types.Block, seq *uint64) (
 	receipts := make([]*chain.Receipt, 0)
 	events := make([]*chain.Event, 0)
 	var index uint64
+
 	for _, signedTxnInBlock := range block.Payset {
-		// identify transactions sent from the algorand BMC
-		if signedTxnInBlock.SignedTxnWithAD.SignedTxn.Txn.ApplicationFields.ApplicationCallTxnFields.ApplicationID ==
-			types.AppIndex(r.opts.AppID) && signedTxnInBlock.EvalDelta.Logs != nil {
-			r.log.Debug("LOG FOUND !!!!!!!!")
-			// there could be multiple logs sent from each transaction
-			for _, txnLog := range signedTxnInBlock.EvalDelta.Logs {
-				event, err := r.getEventFromMsg(txnLog,
-					signedTxnInBlock.SignedTxnWithAD.SignedTxn.Txn.ApplicationFields.ApplicationCallTxnFields.ApplicationArgs)
+		// identify transactions sent from the algorand BMC containign logged messages
+		for _, innerTxn := range signedTxnInBlock.EvalDelta.InnerTxns {
+			if innerTxn.SignedTxn.Txn.ApplicationFields.ApplicationCallTxnFields.ApplicationID == types.AppIndex(r.opts.AppID) &&
+				len(innerTxn.ApplyData.EvalDelta.Logs) > 0 {
+				r.log.Debug("LOG FOUND !!!!!!!!")
+				args := innerTxn.SignedTxn.Txn.ApplicationFields.ApplicationArgs
+				event, err := r.getEventFromMsg(innerTxn.ApplyData.EvalDelta.Logs[0], args)
 				if err != nil {
 					r.log.WithFields(log.Fields{"error": err}).Error(
 						"getRelayReceipts: error extracting event from relay message")

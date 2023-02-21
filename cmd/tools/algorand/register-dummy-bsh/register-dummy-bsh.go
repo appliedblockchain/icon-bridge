@@ -151,7 +151,7 @@ func transferAlgos(
 	if err != nil {
 		log.Fatalf("While waiting for confirmation: %s\n", err)
 	}
-	
+
 }
 
 func main() {
@@ -203,7 +203,7 @@ func main() {
 		log.Fatalf("Failed to init BMC ABI contract: %+v", err)
 	}
 
-	bshMcp.ForeignAccounts = []string{bshAddress.String()}
+	bshMcp.ForeignApps = []uint64{bmcId}
 
 	transferAlgos(client, deployer, bshAddress, 514000)
 
@@ -219,6 +219,7 @@ func main() {
 		log.Fatalf("Failed to init BMC ABI contract: %+v", err)
 	}
 
+	bmcMcp.ForeignAccounts = []string{bshAddress.String()}
 	_, err = callAbiMethod(client, bmcContract, bmcMcp, "registerBSHContract", []interface{}{bshAddress, "dbsh"})
 
 	if err != nil {

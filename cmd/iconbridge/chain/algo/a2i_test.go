@@ -51,6 +51,7 @@ func Test_SendDummyMessage(t *testing.T) {
 	}
 
 	dbshId, _ := strconv.ParseUint(getFileVar("dbsh_app_id"), 10, 64)
+	bmcId, _ := strconv.ParseUint(getFileVar("bmc_app_id"), 10, 64)
 
 	privateKeyStr := getFileVar("algo_private_key")
 
@@ -65,6 +66,7 @@ func Test_SendDummyMessage(t *testing.T) {
 	}
 
 	signer := future.BasicAccountTransactionSigner{Account: deployer}
+	sp.Fee = 2000
 
 	mcp := future.AddMethodCallParams{
 		AppID:           dbshId,
@@ -73,6 +75,8 @@ func Test_SendDummyMessage(t *testing.T) {
 		OnComplete:      types.NoOpOC,
 		Signer:          signer,
 	}
+
+	mcp.ForeignApps = []uint64{bmcId}
 
 	sendMsgFunc, err := getMethod(abiDbsh, "sendServiceMessage")
 	if err != nil {
