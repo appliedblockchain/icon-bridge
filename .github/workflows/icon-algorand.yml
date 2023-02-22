@@ -79,6 +79,9 @@ jobs:
           goloop ks gen --out icon.keystore.json
           KS_ADDRESS=$(cat icon.keystore.json | jq -r '.address')
           PASSWORD=$(docker exec goloop cat goloop.keysecret)
+
+          jq --slurpfile new_contents icon.keystore.json '.relays[].dst.key_store = $new_contents[0]' algo-config.json > tmpfile && mv tmpfile algo-config.json
+
           docker exec goloop goloop chain ls | jq -r '.[0] | .nid' > cache/nid
 
           docker exec goloop goloop rpc sendtx transfer \
@@ -215,7 +218,7 @@ jobs:
 
           ADD_RELAY=$(goloop rpc sendtx call --to $(cat cache/icon_bmc_addr) --method addRelay \
           --param _link=$(cat cache/algo_btp_addr) \
-          --param _addr=$(cat icon.keystore.json | jq .address) \
+          --param _addr=$(cat icon.keystore.json | jq -r .address) \
           --key_store ./icon.keystore.json --key_password gochain \
           --nid $(cat cache/nid) --step_limit 3000000000 --uri http://localhost:9080/api/v3) \
 
@@ -249,6 +252,14 @@ jobs:
       - name: Run integration test
         working-directory: ./cmd/iconbridge/chain/algo
         run: |
+          goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d '"' -f 2) \
+                --uri http://localhost:9080/api/v3 \
+                --method getLastReceivedMessage
+
           go test -run Test_SendDummyMessage
           sleep 10
           cat ../../bmr/bmr.log
+
+          goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d '"' -f 2) \
+              --uri http://localhost:9080/api/v3 \
+              --method getLastReceivedMessage
