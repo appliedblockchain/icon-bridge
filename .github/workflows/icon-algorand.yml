@@ -234,31 +234,21 @@ jobs:
           BMC_ID=$(cat "$ICON_ALGO/cache/bmc_app_id")
           ALGO_ROUND=$(cat "$ICON_ALGO/cache/algo_last_round" | tr -d '\n')
 
-          jq --arg ICON_BTP "$ICON_BTP" \
-          --arg ALGO_BTP "$ALGO_BTP" \
-          --argjson ALGO_ROUND "$ALGO_ROUND" \
-          --argjson BMC_ID "$BMC_ID" \
-          '.relays[0].dst.address=$ICON_BTP | \
-           .relays[0].src.address=$ALGO_BTP | \
-           .relays[0].src.options.verifier.round=$ALGO_ROUND | \
-           .relays[0].src.options.appID=$BMC_ID' \
-          $ICON_ALGO/algo-config.json > a2i_tmp.json
-
+          jq --arg ICON_BTP "$ICON_BTP" --arg ALGO_BTP "$ALGO_BTP" --argjson ALGO_ROUND "$ALGO_ROUND" --argjson BMC_ID "$BMC_ID" '.relays[0].dst.address=$ICON_BTP | .relays[0].src.address=$ALGO_BTP | .relays[0].src.options.verifier.round=$ALGO_ROUND | .relays[0].src.options.appID=$BMC_ID' $ICON_ALGO/algo-config.json > a2i_tmp.json
           mv a2i_tmp.json $ICON_ALGO/algo-config.json
 
           go run . -config=$ICON_ALGO/algo-config.json &
           sleep 10
 
       - name: Run integration test
-        working-directory: ./cmd/iconbridge/chain/algo
+        working-directory: ./devnet/docker/icon-algorand
         run: |
           goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d '"' -f 2) \
                 --uri http://localhost:9080/api/v3 \
                 --method getLastReceivedMessage
 
-          go test -run Test_SendDummyMessage
+          go test ../../../cmd/iconbridge/chain/algo -run Test_SendDummyMessage
           sleep 10
-          cat ../../bmr/bmr.log
 
           goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d '"' -f 2) \
               --uri http://localhost:9080/api/v3 \
