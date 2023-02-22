@@ -171,19 +171,18 @@ jobs:
         working-directory: ./devnet/docker/icon-algorand
         run: |
           export PATH=$PATH:~/go/bin
-          ALGOD_ADDRESS=http://localhost:4001
-          ALGOD_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-          KMD_ADDRESS=http://localhost:4002
-          KMD_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
           kmd -d /tmp/testnet/Node/kmd-v0.5 &
           sleep 5
+          echo http://localhost:4001 >cache/algod_address
+          echo http://localhost:4002 >cache/kmd_address
+          echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa >cache/algo_token
 
-          PRIVATE_KEY=$(KMD_ADDRESS=$KMD_ADDRESS KMD_TOKEN=$KMD_TOKEN kmd-extract-private-key 1)
-          BMC_TX_ID=$(PRIVATE_KEY=$PRIVATE_KEY ALGOD_ADDRESS=$ALGOD_ADDRESS ALGOD_TOKEN=$ALGOD_TOKEN deploy-contract ../../../pyteal/teal/bmc)
-          DUMMY_BSH_TX_ID=$(PRIVATE_KEY=$PRIVATE_KEY ALGOD_ADDRESS=$ALGOD_ADDRESS ALGOD_TOKEN=$ALGOD_TOKEN deploy-contract ../../../pyteal/teal/bsh)
-          BMC_APP_ID=$(ALGOD_ADDRESS=$ALGOD_ADDRESS ALGOD_TOKEN=$ALGOD_TOKEN get-app-id $BMC_TX_ID)
-          DUMMY_BSH_APP_ID=$(ALGOD_ADDRESS=$ALGOD_ADDRESS ALGOD_TOKEN=$ALGOD_TOKEN get-app-id $DUMMY_BSH_TX_ID)
+          PRIVATE_KEY=$(KMD_ADDRESS=$(cat cache/kmd_address) KMD_TOKEN=$(cat cache/algo_token) kmd-extract-private-key 1)
+          BMC_TX_ID=$(PRIVATE_KEY=$PRIVATE_KEY ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) deploy-contract ../../../pyteal/teal/bmc)
+          DUMMY_BSH_TX_ID=$(PRIVATE_KEY=$PRIVATE_KEY ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) deploy-contract ../../../pyteal/teal/bsh)
+          BMC_APP_ID=$(ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) get-app-id $BMC_TX_ID)
+          DUMMY_BSH_APP_ID=$(ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) get-app-id $DUMMY_BSH_TX_ID)
 
           echo $DUMMY_BSH_APP_ID
 
@@ -224,6 +223,12 @@ jobs:
 
           ./../../algorand/scripts/wait_for_transaction.sh $ADD_RELAY
 
+      - name: Register Algorand Dummy BSH
+        working-directory: ./devnet/docker/icon-algorand
+        run: |
+          export PATH=$PATH:~/go/bin
+          ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) PRIVATE_KEY=$(cat cache/algo_private_key) register-dummy-bsh ../../../pyteal/teal cache/
+
       - name: Update config file and start relayer
         working-directory: ./cmd/iconbridge
         run: |
@@ -243,6 +248,7 @@ jobs:
       - name: Run integration test
         working-directory: ./devnet/docker/icon-algorand
         run: |
+          export PATH=$PATH:~/go/bin
           goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d '"' -f 2) \
                 --uri http://localhost:9080/api/v3 \
                 --method getLastReceivedMessage
