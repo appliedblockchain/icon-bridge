@@ -185,15 +185,15 @@ jobs:
           BMC_APP_ID=$(ALGOD_ADDRESS=$ALGOD_ADDRESS ALGOD_TOKEN=$ALGOD_TOKEN get-app-id $BMC_TX_ID)
           DUMMY_BSH_APP_ID=$(ALGOD_ADDRESS=$ALGOD_ADDRESS ALGOD_TOKEN=$ALGOD_TOKEN get-app-id $DUMMY_BSH_TX_ID)
 
-          echo $PRIVATE_KEY > cache/algo_private_key
-          printf '%s' "$BMC_APP_ID" > cache/bmc_app_id
-          printf '%s' "$DUMMY_BSH_APP_ID" > cache/dbsh_app_id
+          echo $DUMMY_BSH_APP_ID
+
+          echo $PRIVATE_KEY >cache/algo_private_key
+          printf '%s' "$BMC_APP_ID" >cache/bmc_app_id
+          printf '%s' "$DUMMY_BSH_APP_ID" >cache/dbsh_app_id
 
           goal app info --app-id $BMC_APP_ID -d /tmp/testnet/Node |
-          awk -F ':' '/Application account:/ {gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2); \
-          print "btp://0x14.algo/" $2}' > cache/algo_btp_addr
-
-          register-dummy-bsh ../../../pyteal/teal
+              awk -F ':' '/Application account:/ {gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2); \
+                    print "btp://0x14.algo/" $2}' >cache/algo_btp_addr
 
       - name: Link Algorand BMC on Icon BMC
         working-directory: ./devnet/docker/icon-algorand

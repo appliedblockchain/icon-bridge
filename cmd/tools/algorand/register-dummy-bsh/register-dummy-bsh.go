@@ -155,13 +155,6 @@ func transferAlgos(
 }
 
 func main() {
-	absPath, err := filepath.Abs(cacheDir)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println("Absolute path:", absPath)
-
 	algodAddress := helpers.GetEnvVar("ALGOD_ADDRESS")
 	algodToken := helpers.GetEnvVar("ALGOD_TOKEN")
 	privateKeyStr := helpers.GetEnvVar("PRIVATE_KEY")
