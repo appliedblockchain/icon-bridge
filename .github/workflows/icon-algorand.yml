@@ -223,21 +223,18 @@ jobs:
 
           ./../../algorand/scripts/wait_for_transaction.sh $ADD_RELAY
 
-      - name: Register Algorand Dummy BSH
-        working-directory: ./devnet/docker/icon-algorand
-        run: |
-          export PATH=$PATH:~/go/bin
-          ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) PRIVATE_KEY=$(cat cache/algo_private_key) register-dummy-bsh ../../../pyteal/teal cache/
-
-      - name: Update config file and start relayer
+      - name: Register Algorand BSH and start relayer
         working-directory: ./cmd/iconbridge
         run: |
+          export PATH=$PATH:~/go/bin
           ICON_ALGO="../../devnet/docker/icon-algorand"
           ICON_BTP="btp://$(cat "$ICON_ALGO/cache/nid").icon/$(cat "$ICON_ALGO/cache/icon_bmc_addr")"
           echo $ICON_BTP > $ICON_ALGO/cache/icon_btp_addr
           ALGO_BTP=$(cat "$ICON_ALGO/cache/algo_btp_addr")
           BMC_ID=$(cat "$ICON_ALGO/cache/bmc_app_id")
           ALGO_ROUND=$(cat "$ICON_ALGO/cache/algo_last_round" | tr -d '\n')
+
+          ALGOD_ADDRESS=$(cat $ICON_ALGO/cache/algod_address) ALGOD_TOKEN=$(cat $ICON_ALGO/cache/algo_token) PRIVATE_KEY=$(cat $ICON_ALGO/cache/algo_private_key) register-dummy-bsh ../../pyteal/teal $ICON_ALGO/cache/
 
           jq --arg ICON_BTP "$ICON_BTP" --arg ALGO_BTP "$ALGO_BTP" --argjson ALGO_ROUND "$ALGO_ROUND" --argjson BMC_ID "$BMC_ID" '.relays[0].dst.address=$ICON_BTP | .relays[0].src.address=$ALGO_BTP | .relays[0].src.options.verifier.round=$ALGO_ROUND | .relays[0].src.options.appID=$BMC_ID' $ICON_ALGO/algo-config.json > a2i_tmp.json
           mv a2i_tmp.json $ICON_ALGO/algo-config.json
@@ -251,11 +248,11 @@ jobs:
           export PATH=$PATH:~/go/bin
           goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d '"' -f 2) \
                 --uri http://localhost:9080/api/v3 \
-                --method getLastReceivedMessage
+                --method getLastReceivedMessage | xxd -r -p
 
           go test ../../../cmd/iconbridge/chain/algo -run Test_SendDummyMessage
           sleep 10
 
           goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d '"' -f 2) \
               --uri http://localhost:9080/api/v3 \
-              --method getLastReceivedMessage
+              --method getLastReceivedMessage | xxd -r -p

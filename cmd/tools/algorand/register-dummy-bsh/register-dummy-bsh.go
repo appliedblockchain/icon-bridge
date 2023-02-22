@@ -20,10 +20,6 @@ import (
 	"github.com/icon-project/icon-bridge/cmd/tools/algorand/helpers"
 )
 
-const (
-	cacheDir = "../../devnet/docker/icon-algorand/cache/"
-)
-
 func initABIContract(client *algod.Client, deployer crypto.Account, contractDir string, appId uint64) (contract *abi.Contract, mcp future.AddMethodCallParams, err error) {
 	b, err := ioutil.ReadFile(contractDir)
 	if err != nil {
@@ -89,6 +85,8 @@ func callAbiMethod(client *algod.Client, contract *abi.Contract, mcp future.AddM
 
 func getFileVar(filename string) string {
 	// open file
+	cacheDir := os.Args[2]
+
 	file, err := os.Open(cacheDir + filename)
 	if err != nil {
 		fmt.Println(err)
