@@ -1,95 +1,95 @@
 {
-    "base_dir": "bmr",
-    "log_level": "debug",
-    "console_level": "trace",
-    "log_writer": {
-        "filename": "bmr/bmr.log"
-    },
-    "stat_collector": {
-        "verbose": false
-    },
-    "relays": [
-        {
-            "name": "a2i",
-            "src": {
-                "address": "btp://0x14.algo/3Z2RSO2F5NJ3GWC4TN6ZQVMJ6EGH6ZZCHLF4PAEK2FNE4ZXKO4TTLEY3UQ",
-                "endpoint": [
-                    "http://localhost:4001",
-                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-                ],
-                "offset": 0,
-                "options": {
-                    "syncConcurrency": 3,
-                    "appID": 54,
-                    "verifier": {
-                        "round": 4005
-                    }
-                }
-            },
-            "dst": {
-                "address": "btp://0x1b2599.icon/cx23bc2cab4ea3c14b732df1e0d6ddd649f2a2a907",
-                "endpoint": [
-                    "http://localhost:9080/api/v3"
-                ],
-                "options": {
-                    "step_limit": 13610920010,
-                    "tx_data_size_limit": 65536
-                },
-                "key_store": {
-                    "address": "hx4263c6c85788d5560a4d12920aa125326be53c17",
-                    "id": "63a4a63d-b82b-4efa-9b85-c5378e3143a0",
-                    "version": 3,
-                    "coinType": "icx",
-                    "crypto": {
-                        "cipher": "aes-128-ctr",
-                        "cipherparams": {
-                            "iv": "cd97c16c945415bc1336e8c3d7451d8f"
-                        },
-                        "ciphertext": "be594e68d59602025663650105940812d3b9fcfef0a84c6b62ba3558c7da7e23",
-                        "kdf": "scrypt",
-                        "kdfparams": {
-                            "dklen": 32,
-                            "n": 65536,
-                            "r": 8,
-                            "p": 1,
-                            "salt": "76d888aadbefd014"
-                        },
-                        "mac": "d624e7aa031fed5e7dd071d47152b055a52d673f9c93dc30cc8a349deeb0ed9e"
-                    }
-                },
-                "key_password": "gochain"
-            }
-        },
-        {
-            "name": "i2a",
-            "src": {
-                "address": "btp://0x1b2599.icon/cx23bc2cab4ea3c14b732df1e0d6ddd649f2a2a907",
-                "endpoint": [
-                    "http://localhost:9080/api/v3"
-                ],
-                "offset": 0,
-                "options": {
-                    "verifier": {
-                        "blockHeight": 50833960,
-                        "validatorsHash": "0x120c4d12ae3770b868e650e950200364fe138b92e872e487f50da4337bcc83c7"
-                    }
-                }
-            },
-            "dst": {
-                "address": "btp://0x14.algo/3Z2RSO2F5NJ3GWC4TN6ZQVMJ6EGH6ZZCHLF4PAEK2FNE4ZXKO4TTLEY3UQ",
-                "endpoint": [
-                    "http://localhost:4001",
-                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-                ],
-                "options": {
-                    "step_limit": 13610920010,
-                    "tx_data_size_limit": 65536
-                },
-                "key_store": {
-                    "id": "63a4a63d-b82b-4efa-9b85-c5378e3143a0",
-                    "coinType": "icx"
-                }
-            }
+  "base_dir": "bmr",
+  "log_level": "debug",
+  "console_level": "trace",
+  "log_writer": {
+    "filename": "bmr/bmr.log"
+  },
+  "stat_collector": {
+    "verbose": false
+  },
+  "relays": [
+    {
+      "name": "a2i",
+      "src": {
+        "address": "btp://0x14.algo/SBRZXJHLQRB6QO2DSJU6RHYAQKZMHHRUQRNNAZ2RWAVYEAWMRYSW472RDQ",
+        "endpoint": [
+          "http://localhost:4001",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        "offset": 0,
+        "options": {
+          "syncConcurrency": 3,
+          "appID": 81,
+          "verifier": {
+            "round": 8457
+          }
         }
-    ]
+      },
+      "dst": {
+        "address": "btp://0x1b2599.icon/cx04f3f4af62ddbcc5aa3d4a6ff3a5740c05ce6ca6",
+        "endpoint": [
+          "http://localhost:9080/api/v3"
+        ],
+        "options": {
+          "step_limit": 13610920010,
+          "tx_data_size_limit": 65536
+        },
+        "key_store": {
+          "address": "hx5ccb9b76b3aa9396ecab50e5bb01c8f292caddfa",
+          "id": "60eed569-f715-45c9-a6c1-e6653779d7bd",
+          "version": 3,
+          "coinType": "icx",
+          "crypto": {
+            "cipher": "aes-128-ctr",
+            "cipherparams": {
+              "iv": "7ac3e2de41a9ccace1ac0c1ec3d71040"
+            },
+            "ciphertext": "c6953966a9fcb8413bc69f7ce6ebc825a5632cd2f6e78c6f6e64c3bc5319c6f2",
+            "kdf": "scrypt",
+            "kdfparams": {
+              "dklen": 32,
+              "n": 65536,
+              "r": 8,
+              "p": 1,
+              "salt": "5bddf69994063d9b"
+            },
+            "mac": "81df56abfeebe3c356a465993b6b27e01a50ece0e4715ceb89f32c555dc302c0"
+          }
+        },
+        "key_password": "gochain"
+      }
+    },
+    {
+      "name": "i2a",
+      "src": {
+        "address": "btp://0x1b2599.icon/cx23bc2cab4ea3c14b732df1e0d6ddd649f2a2a907",
+        "endpoint": [
+          "http://localhost:9080/api/v3"
+        ],
+        "offset": 0,
+        "options": {
+          "verifier": {
+            "blockHeight": 35997,
+            "validatorsHash": "0x785b440bd22e6888f26a52b05b52c71641af39370ee5490714871bbfc78d0f8a"
+          }
+        }
+      },
+      "dst": {
+        "address": "btp://0x14.algo/3Z2RSO2F5NJ3GWC4TN6ZQVMJ6EGH6ZZCHLF4PAEK2FNE4ZXKO4TTLEY3UQ",
+        "endpoint": [
+          "http://localhost:4001",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        "options": {
+          "step_limit": 13610920010,
+          "tx_data_size_limit": 65536
+        },
+        "key_store": {
+          "id": "8xwLFHevQN48nyydpUDHc/B9RWFbwtwtjtYTy34wm95Lps9PxY6pULDlFmSIJxYUemKIAKApTaKu86nPfKr3HA==",
+          "coinType": "avm"
+        }
+      }
+    }
+  ]
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/abi"
@@ -79,6 +80,13 @@ type relayTx struct {
 	txIDs []string
 }
 
+type bmcLink struct {
+	TxSeq         uint64 `json:"tx_seq"`
+	RxSeq         uint64 `json:"rx_seq"`
+	RxHeight      uint64 `json:"rx_height"`
+	CurrentHeight uint64 `json:"current_height"`
+}
+
 func (opts *senderOptions) unmarshal(v map[string]interface{}) error {
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -88,23 +96,23 @@ func (opts *senderOptions) unmarshal(v map[string]interface{}) error {
 }
 
 func (s *sender) Status(ctx context.Context) (*chain.BMCLinkStatus, error) {
-	res, err := s.callAbi(ctx, AbiFunc{"GetStatus", []interface{}{}})
+	f, err := os.Open("chain/algo/linkStatus.json")
 	if err != nil {
-		return nil, fmt.Errorf("Error calling Bmc Handle Relay Message: %w", err)
+		return nil, err
 	}
-	bmcStatus := res.MethodResults[0].ReturnValue
+	defer f.Close()
 
-	switch bmcStatus := bmcStatus.(type) {
-	case [4]uint64:
-		ls := &chain.BMCLinkStatus{
-			TxSeq:         bmcStatus[0],
-			RxSeq:         bmcStatus[1],
-			RxHeight:      bmcStatus[2],
-			CurrentHeight: bmcStatus[3],
-		}
-		return ls, nil
+	link := &bmcLink{}
+	if err := json.NewDecoder(f).Decode(&link); err != nil {
+		return nil, err
 	}
-	return nil, fmt.Errorf("BmcStatus - Couldnt parse abi's return interface")
+
+	return &chain.BMCLinkStatus{
+		TxSeq:         link.TxSeq,
+		RxSeq:         link.RxSeq,
+		RxHeight:      link.RxHeight,
+		CurrentHeight: link.CurrentHeight,
+	}, nil
 }
 
 func (s *sender) Balance(ctx context.Context) (balance, threshold *big.Int, err error) {
