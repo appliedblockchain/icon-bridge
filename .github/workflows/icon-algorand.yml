@@ -132,7 +132,9 @@ jobs:
               --uri http://localhost:9080/api/v3/icon \
               --key_store icon.keystore.json --key_password gochain \
               --nid $(cat cache/nid) --step_limit 10000000000 \
-              --content_type application/java
+              --content_type application/java \
+              --param _bmc=$(cat cache/icon_bmc_addr) \
+              --param _to=0x14.algo
           )
 
           ./../../algorand/scripts/wait_for_transaction.sh $TXN_ID scoreAddress > cache/icon_dbsh_addr
@@ -263,13 +265,4 @@ jobs:
         working-directory: ./devnet/docker/icon-algorand
         run: |
           export PATH=$PATH:~/go/bin
-          goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d '"' -f 2) \
-                --uri http://localhost:9080/api/v3/icon \
-                --method getLastReceivedMessage | xxd -r -p
-
-          go test ../../../cmd/iconbridge/chain/algo -run Test_SendDummyMessage
-          sleep 10
-
-          goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d '"' -f 2) \
-              --uri http://localhost:9080/api/v3/icon \
-              --method getLastReceivedMessage | xxd -r -p
+          ./run-integration-test.sh
