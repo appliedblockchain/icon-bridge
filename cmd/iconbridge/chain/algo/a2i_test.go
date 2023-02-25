@@ -21,7 +21,8 @@ import (
 )
 
 const (
-	cacheDir = "../../../../devnet/docker/icon-algorand/cache/"
+	cacheDir        = "../../../../devnet/docker/icon-algorand/cache/"
+	testContractDir = "../../../../pyteal/teal/bsh/"
 )
 
 // This test is not final, will need changes, but for now sends a transaction to the local network
@@ -31,16 +32,16 @@ func Test_SendDummyMessage(t *testing.T) {
 		t.Errorf("Failed to create algod client: %v", err)
 	}
 
-	abiPath, err := filepath.Abs(contractDir + "contract.json")
+	abiPath, err := filepath.Abs(testContractDir + "contract.json")
 	if err != nil {
 		t.Errorf("Couldn't retrieve abi file: %v", err)
 	}
-	rawBmc, err := ioutil.ReadFile(abiPath)
+	rawDbsh, err := ioutil.ReadFile(abiPath)
 	if err != nil {
 		t.Errorf("Failed to open contract file: %v", err)
 	}
 	abiDbsh := &abi.Contract{}
-	if err = json.Unmarshal(rawBmc, abiDbsh); err != nil {
+	if err = json.Unmarshal(rawDbsh, abiDbsh); err != nil {
 		t.Errorf("Failed to marshal abi contract: %v", err)
 	}
 
