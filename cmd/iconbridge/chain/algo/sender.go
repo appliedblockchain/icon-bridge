@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"os"
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/abi"
@@ -74,17 +73,18 @@ type sender struct {
 }
 
 type relayTx struct {
-	s     *sender
-	round uint64
-	svcs  []AbiFunc
-	txIDs []string
+	s      *sender
+	round  uint64
+	svcs   []AbiFunc
+	txIDs  []string
+	height uint64
 }
 
 type bmcLink struct {
-	TxSeq         uint64 `json:"tx_seq"`
-	RxSeq         uint64 `json:"rx_seq"`
-	RxHeight      uint64 `json:"rx_height"`
-	CurrentHeight uint64 `json:"current_height"`
+	TxSeq    uint64 `json:"tx_seq"`
+	RxSeq    uint64 `json:"rx_seq"`
+	RxHeight uint64 `json:"rx_height"`
+	TxHeight uint64 `json:"tx_height"`
 }
 
 func (opts *senderOptions) unmarshal(v map[string]interface{}) error {
@@ -96,23 +96,7 @@ func (opts *senderOptions) unmarshal(v map[string]interface{}) error {
 }
 
 func (s *sender) Status(ctx context.Context) (*chain.BMCLinkStatus, error) {
-	f, err := os.Open("chain/algo/linkStatus.json")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	link := &bmcLink{}
-	if err := json.NewDecoder(f).Decode(&link); err != nil {
-		return nil, err
-	}
-
-	return &chain.BMCLinkStatus{
-		TxSeq:         link.TxSeq,
-		RxSeq:         link.RxSeq,
-		RxHeight:      link.RxHeight,
-		CurrentHeight: link.CurrentHeight,
-	}, nil
+	return getStatus()
 }
 
 func (s *sender) Balance(ctx context.Context) (balance, threshold *big.Int, err error) {
@@ -153,8 +137,9 @@ func (s *sender) Segment(
 		}
 	}
 	newTx := &relayTx{
-		s:    s,
-		svcs: abiFuncs,
+		s:      s,
+		svcs:   abiFuncs,
+		height: msg.Receipts[0].Height,
 	}
 	return newTx, newMsg, nil
 }
@@ -174,8 +159,16 @@ func (tx relayTx) Send(ctx context.Context) (err error) {
 	return nil
 }
 
-// Implement to respect interface, but txn was already confirmed on abi call
+// Increment sequeence number when a new message gets to the Algorand BMC
 func (tx relayTx) Receipt(ctx context.Context) (blockNumber uint64, err error) {
+	err = updateField("rx_seq")
+	if err != nil {
+		return 0, err
+	}
+	err = updateField("rx_height", tx.height)
+	if err != nil {
+		return 0, err
+	}
 	return tx.round, nil
 }
 

@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"github.com/icon-project/icon-bridge/cmd/iconbridge/chain"
 )
 
-const filename = "linkStatus.json"
+const filePath = "chain/algo/linkStatus.json"
 
-func incrementField(fieldName string) error {
+// create a function similar to the next one, but to replace the field by an argument float value instead of increment it
+func updateField(fieldName string, value ...uint64) error {
 	// Read the contents of the file into a byte slice.
-	fileBytes, err := ioutil.ReadFile(filename)
+	fileBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return err
 	}
@@ -23,12 +26,24 @@ func incrementField(fieldName string) error {
 		return err
 	}
 
-	// Increment the specified field.
-	fieldValue, ok := data[fieldName].(uint64)
-	if !ok {
-		return fmt.Errorf("%s is not a float64", fieldName)
+	// Check if the field exists in the data.
+	if _, ok := data[fieldName]; !ok {
+		return fmt.Errorf("%s field not found", fieldName)
 	}
-	data[fieldName] = fieldValue + 1
+
+	// If there's only one value passed, increment the field.
+	if len(value) == 0 {
+		fieldValue, ok := data[fieldName].(float64)
+		if !ok {
+			return fmt.Errorf("%s is not a float64", fieldName)
+		}
+		data[fieldName] = fieldValue + 1
+	} else if len(value) == 1 {
+		// If there's two values passed, replace the field value with the new value.
+		data[fieldName] = value[0]
+	} else {
+		return fmt.Errorf("too many arguments")
+	}
 
 	// Marshal the updated data back into a JSON string.
 	updatedBytes, err := json.Marshal(data)
@@ -37,10 +52,30 @@ func incrementField(fieldName string) error {
 	}
 
 	// Write the updated JSON string back to the file.
-	err = ioutil.WriteFile(filename, updatedBytes, os.ModePerm)
+	err = ioutil.WriteFile(filePath, updatedBytes, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func getStatus() (*chain.BMCLinkStatus, error) {
+	f, err := os.Open("chain/algo/linkStatus.json")
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	link := &bmcLink{}
+	if err := json.NewDecoder(f).Decode(&link); err != nil {
+		return nil, err
+	}
+
+	return &chain.BMCLinkStatus{
+		TxSeq:         link.TxSeq,
+		RxSeq:         link.RxSeq,
+		RxHeight:      link.RxHeight,
+		CurrentHeight: link.TxHeight,
+	}, nil
 }

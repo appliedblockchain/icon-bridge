@@ -257,7 +257,7 @@ jobs:
           jq --arg ICON_BTP "$ICON_BTP" --arg ALGO_BTP "$ALGO_BTP" --argjson ALGO_ROUND "$ALGO_ROUND" --argjson BMC_ID "$BMC_ID" '.relays[0].dst.address=$ICON_BTP | .relays[0].src.address=$ALGO_BTP | .relays[0].src.options.verifier.round=$ALGO_ROUND | .relays[0].src.options.appID=$BMC_ID' $ICON_ALGO/algo-config.json > a2i_tmp.json
           mv a2i_tmp.json $ICON_ALGO/algo-config.json
 
-          echo '{"tx_seq":0,"rx_seq":0,"rx_height":'$ICON_HEIGHT',"current_height":'$ALGO_ROUND'}' > chain/algo/linkStatus.json
+          echo '{"tx_seq":0,"rx_seq":0,"rx_height":'$ICON_HEIGHT',"tx_height":'$ALGO_ROUND'}' > chain/algo/linkStatus.json
           go run . -config=$ICON_ALGO/algo-config.json &
           sleep 10
 
