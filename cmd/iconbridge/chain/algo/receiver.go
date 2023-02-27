@@ -192,13 +192,13 @@ func (r *receiver) getRelayReceipts(block *types.Block, seq *uint64) (
 			if innerTxn.SignedTxn.Txn.ApplicationFields.ApplicationCallTxnFields.ApplicationID == types.AppIndex(r.opts.AppID) &&
 				len(innerTxn.ApplyData.EvalDelta.Logs) > 0 {
 				r.log.Debug("New message from algorand BMC")
-				err := updateField("tx_seq")
+				err := incrementSeq("tx_seq")
 				if err != nil {
 					r.log.WithFields(log.Fields{"error": err}).Error(
 						"getRelayReceipts: error incrementing tx_seq")
 					return nil, err
 				}
-				err = updateField("tx_height", uint64(block.Round))
+				err = updateHeight("tx_height", uint64(block.Round))
 				if err != nil {
 					r.log.WithFields(log.Fields{"error": err}).Error(
 						"getRelayReceipts: error updating tx_height")

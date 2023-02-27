@@ -161,11 +161,11 @@ func (tx relayTx) Send(ctx context.Context) (err error) {
 
 // Increment sequeence number when a new message gets to the Algorand BMC
 func (tx relayTx) Receipt(ctx context.Context) (blockNumber uint64, err error) {
-	err = updateField("rx_seq")
+	err = incrementSeq("rx_seq")
 	if err != nil {
 		return 0, err
 	}
-	err = updateField("rx_height", tx.height)
+	err = updateHeight("rx_height", tx.height)
 	if err != nil {
 		return 0, err
 	}
