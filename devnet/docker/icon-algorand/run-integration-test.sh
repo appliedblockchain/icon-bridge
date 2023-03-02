@@ -11,13 +11,13 @@ MSG_AFT_TEST=$(goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d 
     --uri http://localhost:9080/api/v3/icon \
     --method getLastReceivedMessage | xxd -r -p)
 
-if [ $MSG_BEF_TEST = $MSG_AFT_TEST ]
+if [ "$MSG_BEF_TEST" = "$MSG_AFT_TEST" ]
 then
     echo "Dummy BSH didn't receive the message from Algorand"
     exit 1
 fi
 
-MSG_BEF_TEST=ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) get-global-state-by-key $(cat cache/dbsh_app_id) last_received_message
+MSG_BEF_TEST=$(ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) get-global-state-by-key $(cat cache/dbsh_app_id) last_received_message)
 
 TXN_ID=$(
     goloop rpc sendtx call --to $(cat cache/icon_dbsh_addr) \
@@ -31,9 +31,9 @@ TXN_ID=$(
 
 ./../../algorand/scripts/wait_for_transaction.sh $TXN_ID
 
-MSG_AFT_TEST=ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) get-global-state-by-key $(cat cache/dbsh_app_id) last_received_message
+MSG_AFT_TEST=$(ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) get-global-state-by-key $(cat cache/dbsh_app_id) last_received_message)
 
-if [ $MSG_BEF_TEST = $MSG_AFT_TEST ]
+if [ "$MSG_BEF_TEST" = "$MSG_AFT_TEST" ]
 then
     echo "Dummy BSH didn't receive the message from Icon"
     exit 1
