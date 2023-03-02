@@ -14,6 +14,8 @@ MSG_AFT_TEST=$(goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d 
 if [ "$MSG_BEF_TEST" = "$MSG_AFT_TEST" ]
 then
     echo "Dummy BSH didn't receive the message from Algorand"
+    echo "MSG_BEF_TEST: $MSG_BEF_TEST"
+    echo "MSG_AFT_TEST: $MSG_AFT_TEST"
     exit 1
 fi
 
@@ -36,5 +38,7 @@ MSG_AFT_TEST=$(ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/
 if [ "$MSG_BEF_TEST" = "$MSG_AFT_TEST" ]
 then
     echo "Dummy BSH didn't receive the message from Icon"
+    echo "MSG_BEF_TEST: $MSG_BEF_TEST"
+    echo "MSG_AFT_TEST: $MSG_AFT_TEST"
     exit 1
 fi
