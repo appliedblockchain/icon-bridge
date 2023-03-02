@@ -5,7 +5,7 @@ A2I_BEF_TEST=$(goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d 
 
 echo $A2I_BEF_TEST
 ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) PRIVATE_KEY=$(cat cache/algo_private_key) dbsh-call-send-service-message ../../../pyteal/teal $(cat cache/bmc_app_id) $(cat cache/dbsh_app_id)
-sleep 15
+sleep 30
 
 A2I_AFT_TEST=$(goloop rpc call --to $(echo $(cat cache/icon_dbsh_addr) | cut -d '"' -f 2) \
     --uri http://localhost:9080/api/v3/icon \
@@ -33,7 +33,7 @@ TXN_ID=$(
 )
 
 ./../../algorand/scripts/wait_for_transaction.sh $TXN_ID
-sleep 30
+sleep 25
 
 I2A_AFT_TEST=$(ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) get-global-state-by-key $(cat cache/dbsh_app_id) last_received_message)
 echo $I2A_AFT_TEST
