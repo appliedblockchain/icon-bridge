@@ -21,11 +21,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/icon-project/icon-bridge/cmd/iconbridge/chain/icon/types"
 	"math/big"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/icon-project/icon-bridge/cmd/iconbridge/chain/icon/types"
 
 	"github.com/icon-project/icon-bridge/cmd/iconbridge/chain"
 	"github.com/icon-project/icon-bridge/common"
@@ -128,6 +129,9 @@ func (s *sender) Status(ctx context.Context) (*chain.BMCLinkStatus, error) {
 	ls.CurrentHeight = hexInt2Uint64(bs.CurrentHeight)
 	ls.RxHeight = hexInt2Uint64(bs.RxHeight)
 	ls.RxHeightSrc = hexInt2Uint64(bs.RxHeightSrc)
+
+	fmt.Println("--------icon seq: %w", ls.TxSeq)
+
 	return ls, nil
 }
 
