@@ -240,7 +240,7 @@ jobs:
           jq --arg VALIDATORS "$VALIDATORS" --argjson ICON_HEIGHT "$((ICON_HEIGHT-1))" '.relays[1].src.options.verifier.validatorsHash=$VALIDATORS | .relays[1].src.options.verifier.blockHeight=$ICON_HEIGHT' $ICON_ALGO/algo-config.json > config_tmp.json
           mv config_tmp.json $ICON_ALGO/algo-config.json
 
-      - name: Register Algorand BSH and start relayer
+      - name: Register Algorand BSH, start relayer and run integration test
         working-directory: ./cmd/iconbridge
         run: |
           export PATH=$PATH:~/go/bin
@@ -260,7 +260,6 @@ jobs:
             --argjson ALGO_ROUND "$ALGO_ROUND" \
             --argjson BMC_ID "$BMC_ID" \
             --argjson BSH_ID "$BSH_ID" \
-            --arg VALIDATORS "$VALIDATORS" \
             --argjson ICON_HEIGHT "$((ICON_HEIGHT - 1))" \
             '.relays[0].dst.address=$ICON_BTP |
               .relays[0].src.address=$ALGO_BTP |
@@ -269,17 +268,16 @@ jobs:
               .relays[1].dst.options.bmc_id=$BMC_ID |
               .relays[1].src.address=$ICON_BTP |
               .relays[1].dst.address=$ALGO_BTP |
-              .relays[1].src.options.verifier.validatorsHash=$VALIDATORS |
               .relays[1].src.options.verifier.blockHeight=$ICON_HEIGHT |
               .relays[1].dst.options.bsh_map[0].bsh_id=$BSH_ID' $ICON_ALGO/algo-config.json > config_tmp.json
           mv config_tmp.json $ICON_ALGO/algo-config.json
 
           echo '{"tx_seq":0,"rx_seq":0,"rx_height":'$ICON_HEIGHT',"tx_height":'$ALGO_ROUND'}' > chain/algo/linkStatus.json
           go run . -config=$ICON_ALGO/algo-config.json &
-          sleep 10
 
-      - name: Run integration test
-        working-directory: ./devnet/docker/icon-algorand
-        run: |
-          export PATH=$PATH:~/go/bin
+          sleep 10
+          cd $ICON_ALGO
           ./run-integration-test.sh
+
+          tty
+          less bmr/bmr.log
