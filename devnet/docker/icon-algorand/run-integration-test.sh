@@ -33,7 +33,7 @@ TXN_ID=$(
 )
 
 ./../../algorand/scripts/wait_for_transaction.sh $TXN_ID
-sleep 15
+sleep 30
 
 I2A_AFT_TEST=$(ALGOD_ADDRESS=$(cat cache/algod_address) ALGOD_TOKEN=$(cat cache/algo_token) get-global-state-by-key $(cat cache/dbsh_app_id) last_received_message)
 echo $I2A_AFT_TEST
