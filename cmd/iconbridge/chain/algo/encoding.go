@@ -54,7 +54,11 @@ func DecodeRelayMessage(rlpMsg string) (string, interface{}, error) {
 		err = errors.Wrapf(err, "Failed to decode bmc msg: %v", err)
 		return "", nil, err
 	}
-	//msgSn := (&big.Int{}).SetBytes(bmcMsg.Sn)
+
+	if bmcMsg.Svc == "dbsh" {
+		return bmcMsg.Svc, bmcMsg.Message, nil
+	}
+
 	svcMessage := ServiceMessage{}
 	if err := RlpDecodeHex(hex.EncodeToString(bmcMsg.Message), &svcMessage); err != nil {
 		err = errors.Wrapf(err, "Failed to decode service message: %v", err)
